@@ -1,6 +1,3 @@
-from abc import ABC, abstractmethod
-
-
 class AbstractAnimalHome(ABC):
     def __init__(self, name, location, area):
         self.name = name
@@ -42,11 +39,17 @@ class Farm(AbstractAnimalHome):
         return "Farm"
 
 
+class InvalidAnimalException(Exception):
+    pass
+
+
 class AnimalHomeManager:
     def __init__(self):
         self.animal_homes = []
 
     def add_animal_home(self, animal_home):
+        if not isinstance(animal_home, (Zoo, Farm)):
+            raise InvalidAnimalException("Invalid animal type")
         self.animal_homes.append(animal_home)
 
     def __len__(self):
@@ -78,6 +81,25 @@ class AnimalHomeManager:
         return {'any': any(condition(animal_home) for animal_home in self.animal_homes)}
 
 
+import logging
+
+def logged(exception, mode):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except exception as e:
+                if mode == "console":
+                    logging.error(str(e))
+                elif mode == "file":
+                    logging.basicConfig(filename="logfile.log", level=logging.ERROR)
+                    logging.error(str(e))
+                else:
+                    raise ValueError("Invalid logging mode")
+        return wrapper
+    return decorator
+
+
 zoo = Zoo("Kyiv Zoo", "Kyiv", 92, 3292, "9:00 - 18:00", 5000)
 farm1 = Farm("Cattle Farm", "Rural Area", 500, "Cattle", 1000)
 farm2 = Farm("Poultry Farm", "Rural Area", 300, "Poultry", 500)
@@ -86,6 +108,12 @@ animal_home_manager = AnimalHomeManager()
 animal_home_manager.add_animal_home(zoo)
 animal_home_manager.add_animal_home(farm1)
 animal_home_manager.add_animal_home(farm2)
+
+@logged(InvalidAnimalException, "console")
+def example_function():
+    animal_home_manager.add_animal_home("Invalid Animal")
+
+example_function()
 
 print("Calculate do_something results:", animal_home_manager.calculate_do_something_results())
 print("Concatenated objects with indices:", animal_home_manager.get_concatenated_objects_with_indices())
