@@ -1,33 +1,97 @@
-class Zoo:
-    def __init__(self, name=None, location=None, area=0.0, capacity=0):
+from abc import ABC, abstractmethod
+
+
+class AbstractAnimalHome(ABC):
+    def __init__(self, name, location, area):
         self.name = name
         self.location = location
         self.area = area
+
+    @abstractmethod
+    def calculate_cost_per_month(self):
+        pass
+
+    def do_something(self):
+        pass
+
+
+class Zoo(AbstractAnimalHome):
+    def __init__(self, name, location, area, capacity, working_hours, daily_cost):
+        super().__init__(name, location, area)
         self.capacity = capacity
+        self.working_hours = working_hours
+        self.daily_cost = daily_cost
 
-    @staticmethod
-    def get_instance():
-        return Zoo.instance
+    def calculate_cost_per_month(self):
+        return self.daily_cost * 30
 
-    def increase_capacity(self, count):
-        self.capacity += count
-
-    def split_area(self):
-        self.area /= 2
-
-    def add_new_region(self, area):
-        self.area += area
-
-    def __str__(self):
-        return f"Zoo(name={self.name}, location={self.location}, area={self.area}, capacity={self.capacity})"
+    def do_something(self):
+        return "Zoo"
 
 
-Zoo.instance = Zoo()
+class Farm(AbstractAnimalHome):
+    def __init__(self, name, location, area, animal_type, daily_food_cost):
+        super().__init__(name, location, area)
+        self.animal_type = animal_type
+        self.daily_food_cost = daily_food_cost
 
-if __name__ == "__main__":
-    ZooArray = [None] * 4
-    ZooArray[0] = Zoo()
-    ZooArray[1] = Zoo("Kyiv Zoo", "Kyiv", 92, 3292)
-    ZooArray[2] = Zoo.get_instance()
-    ZooArray[3] = Zoo.get_instance()
-    print(ZooArray[1])
+    def calculate_cost_per_month(self):
+        return self.daily_food_cost * 30
+
+    def do_something(self):
+        return "Farm"
+
+
+class AnimalHomeManager:
+    def __init__(self):
+        self.animal_homes = []
+
+    def add_animal_home(self, animal_home):
+        self.animal_homes.append(animal_home)
+
+    def __len__(self):
+        return len(self.animal_homes)
+
+    def __getitem__(self, index):
+        return self.animal_homes[index]
+
+    def __iter__(self):
+        return iter(self.animal_homes)
+
+    def calculate_do_something_results(self):
+        return [animal_home.do_something() for animal_home in self.animal_homes]
+
+    def get_concatenated_objects_with_indices(self):
+        return [(index, str(animal_home)) for index, animal_home in enumerate(self.animal_homes)]
+
+    def get_objects_with_do_something_results(self):
+        return [(animal_home, animal_home.do_something()) for animal_home in self.animal_homes]
+
+    def get_attribute_values_by_type(self, data_type):
+        return {key: value for key, value in self.animal_homes[0].__dict__.items()
+                if isinstance(value, data_type)}
+
+    def check_condition_for_all_objects(self, condition):
+        return {'all': all(condition(animal_home) for animal_home in self.animal_homes)}
+
+    def check_condition_for_any_object(self, condition):
+        return {'any': any(condition(animal_home) for animal_home in self.animal_homes)}
+
+
+zoo = Zoo("Kyiv Zoo", "Kyiv", 92, 3292, "9:00 - 18:00", 5000)
+farm1 = Farm("Cattle Farm", "Rural Area", 500, "Cattle", 1000)
+farm2 = Farm("Poultry Farm", "Rural Area", 300, "Poultry", 500)
+
+animal_home_manager = AnimalHomeManager()
+animal_home_manager.add_animal_home(zoo)
+animal_home_manager.add_animal_home(farm1)
+animal_home_manager.add_animal_home(farm2)
+
+print("Calculate do_something results:", animal_home_manager.calculate_do_something_results())
+print("Concatenated objects with indices:", animal_home_manager.get_concatenated_objects_with_indices())
+print("Objects with do_something results:", animal_home_manager.get_objects_with_do_something_results())
+print("Attribute values of type int:", animal_home_manager.get_attribute_values_by_type(int))
+print("Condition for all objects:", animal_home_manager.check_condition_for_all_objects(
+    lambda animal_home: animal_home.area > 100))
+print("Condition for any object:", animal_home_manager.check_condition_for_any_object(
+    lambda animal_home: animal_home.location == "Rural Area"))
